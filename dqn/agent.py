@@ -11,6 +11,20 @@ from .replay_memory import ReplayMemory
 from .utils import data_reformat, img2patch
 from tqdm import tqdm
 
+
+def enhance_contrast(img):
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=0.2, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    # ca = clahe.apply(a)
+    # cb = clahe.apply(b)
+
+    limg = cv2.merge((cl, a, b))
+
+    final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    return final
+ 
 class Agent(BaseModel):
     def __init__(self, config, environment, sess):
         super(Agent, self).__init__(config)
@@ -547,8 +561,11 @@ class Agent(BaseModel):
                 # save images
                 if self.is_save:
                     name += '_' + str(action + 1)
-                    save_img = my_img[:,:,::-1] * 255
-                    cv2.imwrite(name + '.png', save_img)
+                    save_img = my_img[:, :, ::-1] * 255
+                    save_img = np.clip(save_img, 0, 255)
+             
+                    save_img = enhance_contrast(save_img.astype(np.uint8))
+                    cv2.imwrite(name + '.png',  save_img)
 
             # update my test image
             print('Image %s processed' % base_name)
