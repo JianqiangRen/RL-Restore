@@ -1,0 +1,1 @@
+python main.py --dataset image --fold data/test/mine

@@ -528,6 +528,26 @@ class Agent(BaseModel):
         mean_base_psnr = total_base_psnr / (img_num + batch_size)
         print('base_psnr: %.4f' % mean_base_psnr)
 
+    def play_image(self, my_img):
+        my_img = my_img[:, :, ::-1] / 255.
+        for m in range(self.stop_step):
+            # first step
+            if m == 0:
+                # previous action is None
+                pre_action = None
+        
+            # predict action
+            action = self.predict_mine(my_img, pre_action, count_step=m)
+            if action == self.action_size - 1:
+                break
+            pre_action = action
+            my_img_next = self.env.act_test_mine(my_img, action)
+            my_img = my_img_next
+    
+        out_img = my_img[:, :, ::-1] * 255
+        out_img = np.clip(out_img, 0, 255).astype(np.uint8)
+        out_img = enhance_contrast(out_img.astype(np.uint8))
+        return out_img
 
     def play_mine(self):
         # create save folder if needed
